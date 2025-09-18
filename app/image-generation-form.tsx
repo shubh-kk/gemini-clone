@@ -15,9 +15,10 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Textarea } from "@/components/ui/textarea"
-import { generateImage } from "@/server/image"
+import { generateImage, generateImageMock } from "@/server/image"
 import { useState } from "react"
 import Image from "next/image"
+import { Loader2 } from "lucide-react"
 
 const formSchema = z.object({
     prompt: z.string(),
@@ -35,12 +36,18 @@ export function ImageGenerationForm() {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        // Prevent double submission
+        if (isLoading) return;
+
         try {
             setIsLoading(true)
             const image = await generateImage(values.prompt)
+            // const image = await generateImageMock(values.prompt) // Use mock for testing UI
             setImage(image)
         } catch (error) {
-            console.error(error)
+            console.error('Image generation error:', error)
+            // You might want to show this error to the user
+            alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
         } finally {
             setIsLoading(false)
         }
@@ -67,7 +74,7 @@ export function ImageGenerationForm() {
                         )}
                     />
                     <Button disabled={isLoading} type="submit" className="w-full">
-                        {isLoading ? "Generating..." : "Generate Image"}
+                        {isLoading ? <Loader2 className="animate-spin" /> : "Generate Image"}
                     </Button>
                 </form>
             </Form>
